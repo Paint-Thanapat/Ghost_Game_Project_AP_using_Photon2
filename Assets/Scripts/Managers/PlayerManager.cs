@@ -2,10 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
+using System.IO;
 
 public class PlayerManager : MonoBehaviour
 {
-    [SerializeField] private PhotonView PV;
+    PhotonView PV;
 
     private void Awake()
     {
@@ -23,6 +24,6 @@ public class PlayerManager : MonoBehaviour
     void CreateController()
     {
         // Create Player Controller
-        
+        PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerController"), Vector3.zero, Quaternion.identity);
     }
 }
