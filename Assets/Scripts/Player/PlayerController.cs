@@ -1,14 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
+using HashTable = ExitGames.Client.Photon.Hashtable;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviourPunCallbacks
 {
-
     [SerializeField] GameObject cameraHolder;
+    [SerializeField] GameObject modelHolder;
     [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
-
     [SerializeField] Item[] items;
 
     int itemIndex;
@@ -19,12 +20,14 @@ public class PlayerController : MonoBehaviour
     Vector3 smoothMoveVelocity;
     Vector3 moveAmount;
 
+    Animator anim;
     Rigidbody rb;
 
     PhotonView PV;
 
     private void Awake()
     {
+        anim = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody>();
         PV = GetComponent<PhotonView>();
     }
@@ -92,9 +95,38 @@ public class PlayerController : MonoBehaviour
 
     void Move()
     {
-        Vector3 moveDir = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical")).normalized;
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
 
-        moveAmount = Vector3.SmoothDamp(moveAmount, moveDir * (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed), ref smoothMoveVelocity, smoothTime);
+        bool isSprint = Input.GetKey(KeyCode.LeftShift);
+
+        Vector3 moveDir = new Vector3(horizontal, 0, vertical).normalized;
+
+        moveAmount = Vector3.SmoothDamp(moveAmount, moveDir * (isSprint ? sprintSpeed : walkSpeed), ref smoothMoveVelocity, smoothTime);
+
+        // Animation
+        if (horizontal != 0 || vertical != 0)
+        {
+            if (isSprint)
+            {
+                anim.SetBool("isRun", true);
+                anim.SetBool("isWalk", true);
+            }
+            else
+            {
+                anim.SetBool("isWalk", true);
+                anim.SetBool("isRun", false);
+            }
+        }
+        else
+        {
+            anim.SetBool("isWalk", false);
+            anim.SetBool("isRun", false);
+        }
+
+        // Rotate the Model
+        Vector3 lookPoint = Vector3.Slerp(modelHolder.transform.forward.normalized, transform.TransformDirection(moveAmount).normalized, smoothTime);
+        modelHolder.transform.LookAt(transform.position + lookPoint);
     }
 
     void Jump()
@@ -102,6 +134,8 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) && grounded)
         {
             rb.AddForce(transform.up * jumpForce, ForceMode.VelocityChange);
+
+            anim.SetTrigger("isJump");
         }
     }
 
@@ -120,6 +154,21 @@ public class PlayerController : MonoBehaviour
         }
 
         previousItemIndex = itemIndex;
+
+        if (PV.IsMine)
+        {
+            ExitGames.Client.Photon.Hashtable hash = new ExitGames.Client.Photon.Hashtable();
+            hash.Add("ItemIndex", itemIndex);
+            PhotonNetwork.LocalPlayer.SetCustomProperties(hash);
+        }
+    }
+
+    public override void OnPlayerPropertiesUpdate(Player targetPlayer, HashTable changedProps)
+    {
+        if (!PV.IsMine && targetPlayer == PV.Owner)
+        {
+            EquipItem((int)changedProps["ItemIndex"]);
+        }
     }
 
     public void SetGroundedState(bool _grounded)
