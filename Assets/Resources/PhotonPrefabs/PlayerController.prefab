@@ -52,6 +52,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cameraHolder: {fileID: 3387309494015107892}
+  mainCamera: {fileID: 4513384508161037163}
   modelHolder: {fileID: 5542355050334930638}
   mouseSensitivity: 3
   sprintSpeed: 9

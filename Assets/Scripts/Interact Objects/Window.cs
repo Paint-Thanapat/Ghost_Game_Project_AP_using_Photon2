@@ -38,4 +38,17 @@ public class Window : MonoBehaviour
                 break;
         }
     }
+
+    public void CloseWindowFull()
+    {
+        if (!windowFull.activeInHierarchy)
+            return;
+
+        windowFull.GetComponent<Animator>().SetTrigger("isClose");
+    }
+
+    public void RepairWindow()
+    {
+
+    }
 }

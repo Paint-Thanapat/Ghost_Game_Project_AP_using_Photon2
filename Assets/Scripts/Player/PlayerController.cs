@@ -8,6 +8,7 @@ using HashTable = ExitGames.Client.Photon.Hashtable;
 public class PlayerController : MonoBehaviourPunCallbacks
 {
     [SerializeField] GameObject cameraHolder;
+    [SerializeField] Camera mainCamera;
     [SerializeField] GameObject modelHolder;
     [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
     [SerializeField] Item[] items;
@@ -53,25 +54,18 @@ public class PlayerController : MonoBehaviourPunCallbacks
         Look();
         Move();
         Jump();
+        SwitchEquipment();
 
-
-        // checking player press 1 or 2 on keybroad to switch the tool
-        for (int i = 0; i < items.Length; i++)
+        // Find window to interact
+        if (Input.GetMouseButtonDown(0))
         {
-            if (Input.GetKeyDown((i + 1).ToString()))
+            if (Physics.Raycast(mainCamera.transform.position, mainCamera.transform.forward, out RaycastHit hit, 100))
             {
-                EquipItem(i);
-                break;
+                if (hit.collider.gameObject.GetComponent<Window>())
+                {
+                    WindowManager.Instance.CheckToSetWindow(hit.collider.gameObject.GetComponent<Window>());
+                }
             }
-        }
-
-        if (Input.GetAxisRaw("Mouse ScrollWheel") > 0f)
-        {
-            EquipItem(itemIndex + 1 >= items.Length ? 0 : itemIndex + 1);
-        }
-        else if (Input.GetAxisRaw("Mouse ScrollWheel") < 0f)
-        {
-            EquipItem(itemIndex - 1 < 0 ? items.Length - 1 : itemIndex - 1);
         }
     }
 
@@ -136,6 +130,28 @@ public class PlayerController : MonoBehaviourPunCallbacks
             rb.AddForce(transform.up * jumpForce, ForceMode.VelocityChange);
 
             anim.SetTrigger("isJump");
+        }
+    }
+
+    void SwitchEquipment()
+    {
+        // checking player press 1 or 2 on keybroad to switch the tool
+        for (int i = 0; i < items.Length; i++)
+        {
+            if (Input.GetKeyDown((i + 1).ToString()))
+            {
+                EquipItem(i);
+                break;
+            }
+        }
+
+        if (Input.GetAxisRaw("Mouse ScrollWheel") > 0f)
+        {
+            EquipItem(itemIndex + 1 >= items.Length ? 0 : itemIndex + 1);
+        }
+        else if (Input.GetAxisRaw("Mouse ScrollWheel") < 0f)
+        {
+            EquipItem(itemIndex - 1 < 0 ? items.Length - 1 : itemIndex - 1);
         }
     }
 
