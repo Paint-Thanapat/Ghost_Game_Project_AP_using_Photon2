@@ -31,8 +31,11 @@ public class WindowManager : MonoBehaviour
     IEnumerator RandomWindowBreak()
     {
         yield return new WaitForSeconds(Random.Range(minMaxWindowBreakTime.x, minMaxWindowBreakTime.y));
-        int randomWindowIndex = Random.Range(0, windows.Length);
-        SetWindowBreak(randomWindowIndex);
+        for (int i = 0; i < 10; i++)
+        {
+            int randomWindowIndex = Random.Range(0, windows.Length);
+            SetWindowBreak(Random.Range(0, windows.Length));
+        }
     }
 
     public void CheckToSetWindow(Window _window)
